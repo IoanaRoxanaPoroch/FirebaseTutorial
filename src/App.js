@@ -1,107 +1,113 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-} from "firebase/firestore";
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
 
-import { db } from "./firebase-config";
-import { useId } from "react";
+import { auth } from "./firebase-config";
 
 function App() {
-  const id = useId();
-  const [users, setUsers] = useState([]);
-  const usersCollectionRef = collection(db, "users");
-  const [newUser, setNewUserData] = useState({
-    name: "",
-    age: "",
+  const [authUser, setAuthUser] = useState({
+    registerEmail: "",
+    registerPassword: "",
+    loginEmail: "",
+    loginPassword: "",
   });
 
-  useEffect(() => {
-    const getUsers = async () => {
-      const data = await getDocs(usersCollectionRef);
-      setUsers(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-    };
-    getUsers();
-  }, []);
+  const [user, setUser] = useState({});
 
-  const createUser = async () => {
-    await addDoc(usersCollectionRef, {
-      name: newUser.name,
-      age: Number(newUser.age),
-    });
+  const register = async () => {
+    try {
+      const user = await createUserWithEmailAndPassword(
+        auth,
+        authUser.registerEmail,
+        authUser.registerPassword
+      );
+      console.log("user", user);
+    } catch (error) {
+      console.log(error.message);
+    }
   };
 
-  const updateUser = async (id, age) => {
-    const userDoc = doc(db, "users", id);
-    const newFields = { age: age + 1 };
-    await updateDoc(userDoc, newFields);
+  const login = async () => {
+    try {
+      const user = await signInWithEmailAndPassword(
+        auth,
+        authUser.loginEmail,
+        authUser.loginPassword
+      );
+      console.log("user", user);
+    } catch (error) {
+      console.log(error.message);
+    }
   };
 
-  const deleteUser = async (id) => {
-    const userDoc = doc(db, "users", id);
-
-    await deleteDoc(userDoc);
+  const logout = async () => {
+    await signOut(auth);
   };
 
   const onInputChange = (e) => {
     const { name, value } = e.target;
-    setNewUserData({
-      ...newUser,
-      [name]: value,
-    });
+    setAuthUser({ ...authUser, [name]: value });
   };
+
+  useEffect(() => {
+    onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+  }, []);
+
   return (
     <div>
-      <label for={id}>dwadwadaw</label>
-      <input
-        id={id}
-        type="text"
-        placeholder="Name..."
-        value={newUser.name}
-        name="name"
-        tabIndex={1}
-        onChange={onInputChange}
-      />
-      <input
-        type="number"
-        value={newUser.age}
-        name="age"
-        tabIndex={3}
-        placeholder="Age..."
-        onChange={onInputChange}
-      />
+      <div>
+        <h3>Register User</h3>
 
-      <button onClick={createUser}>Create User</button>
+        <input
+          name="registerEmail"
+          type="text"
+          placeholder="Email..."
+          value={authUser.registerEmail}
+          onChange={onInputChange}
+        />
 
-      {users.map((user, index) => {
-        return (
-          <div key={index}>
-            <h1>Name:{user.name}</h1>
+        <input
+          name="registerPassword"
+          type="text"
+          value={authUser.registerPassword}
+          placeholder="Password ..."
+          onChange={onInputChange}
+        />
 
-            <h1>Age:{user.age}</h1>
+        <button onClick={register}>Create User</button>
+      </div>
 
-            <button
-              onClick={() => {
-                updateUser(user.id, user.age);
-              }}
-            >
-              Increase age
-            </button>
+      <div>
+        <h3>Login</h3>
 
-            <button
-              onClick={() => {
-                deleteUser(user.id);
-              }}
-            >
-              Delete User
-            </button>
-          </div>
-        );
-      })}
+        <input
+          name="loginEmail"
+          type="text"
+          value={authUser.loginEmail}
+          placeholder="Email..."
+          onChange={onInputChange}
+        />
+
+        <input
+          name="loginPassword"
+          type="text"
+          value={authUser.loginPassword}
+          placeholder="Password ..."
+          onChange={onInputChange}
+        />
+
+        <button onClick={login}>Login</button>
+      </div>
+
+      <h4>User Logged In: {user?.email}</h4>
+
+      <button onClick={logout}>Sign Out</button>
     </div>
   );
 }
