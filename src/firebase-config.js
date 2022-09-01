@@ -16,16 +16,11 @@ export const auth = getAuth(app);
 
 const provier = new GoogleAuthProvider();
 
-export const signInWithGoogle = () => {
-  signInWithPopup(auth, provier)
-    .then((result) => {
-      const name = result.user.displayName;
-      const email = result.user.email;
-      const profilePic = result.user.photoURL;
+export const signInWithGoogle = async () => {
+  const result = await signInWithPopup(auth, provier);
 
-      localStorage.setItem("name", name);
-      localStorage.setItem("email", email);
-      localStorage.setItem("profilePic", profilePic);
-    })
-    .catch((error) => console.log(error));
+  const name = result.user.displayName;
+  const email = result.user.email;
+  const profilePic = result.user.photoURL;
+  return { name, email, profilePic };
 };
