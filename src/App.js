@@ -9,12 +9,16 @@ import {
 } from "firebase/firestore";
 
 import { db } from "./firebase-config";
+import { useId } from "react";
 
 function App() {
+  const id = useId();
   const [users, setUsers] = useState([]);
   const usersCollectionRef = collection(db, "users");
-  const [newName, setNewName] = useState("");
-  const [newAge, setNewAge] = useState(0);
+  const [newUser, setNewUserData] = useState({
+    name: "",
+    age: "",
+  });
 
   useEffect(() => {
     const getUsers = async () => {
@@ -25,7 +29,10 @@ function App() {
   }, []);
 
   const createUser = async () => {
-    await addDoc(usersCollectionRef, { name: newName, age: Number(newAge) });
+    await addDoc(usersCollectionRef, {
+      name: newUser.name,
+      age: Number(newUser.age),
+    });
   };
 
   const updateUser = async (id, age) => {
@@ -40,22 +47,32 @@ function App() {
     await deleteDoc(userDoc);
   };
 
+  const onInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewUserData({
+      ...newUser,
+      [name]: value,
+    });
+  };
   return (
     <div>
+      <label for={id}>dwadwadaw</label>
       <input
+        id={id}
         type="text"
         placeholder="Name..."
-        onChange={(e) => {
-          setNewName(e.target.value);
-        }}
+        value={newUser.name}
+        name="name"
+        tabIndex={1}
+        onChange={onInputChange}
       />
-
       <input
         type="number"
+        value={newUser.age}
+        name="age"
+        tabIndex={3}
         placeholder="Age..."
-        onChange={(e) => {
-          setNewAge(e.target.value);
-        }}
+        onChange={onInputChange}
       />
 
       <button onClick={createUser}>Create User</button>
